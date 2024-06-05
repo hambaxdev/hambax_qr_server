@@ -6,14 +6,8 @@ require("dotenv").config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Настройка CORS
-const corsOptions = {
-    origin: '*', // Разрешить все источники (для тестирования)
-    optionsSuccessStatus: 200
-};
-
-app.use(cors(corsOptions));
 app.use(bodyParser.json());
+app.use(cors());
 
 const authRoutes = require("./routes/auth");
 const ticketsRoutes = require("./routes/tickets");

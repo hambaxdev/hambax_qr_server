@@ -1,11 +1,6 @@
-// routes/tickets.js
-
 const express = require("express");
-const mysql = require("mysql");
-const jwt = require("jsonwebtoken");
-
 const router = express.Router();
-const SECRET_KEY = process.env.SECRET_KEY;
+const mysql = require("mysql");
 
 const db = mysql.createConnection({
     host: process.env.DB_HOST,
@@ -19,22 +14,37 @@ db.connect((err) => {
     console.log("MySQL connected...");
 });
 
-// Проверка QR-кода
 router.post("/check_qr", (req, res) => {
     const { qr_hash } = req.body;
 
+    console.log('check_qr');
+    if (!qr_hash) {
+        return res.status(400).send("QR hash is required");
+    }
+
     db.query("SELECT * FROM tickets WHERE qr_hash = ?", [qr_hash], (err, results) => {
-        if (err) return res.status(500).send("Error on the server.");
-        if (results.length === 0) return res.status(404).send("QR code not found.");
+        if (err) {
+            console.error("Database query error:", err);
+            return res.status(500).send("Error on the server.");
+        }
+
+        if (results.length === 0) {
+            return res.status(404).send("QR code not found.");
+        }
 
         const ticket = results[0];
+
         if (ticket.is_active) {
-            db.query("UPDATE tickets SET is_active = 0 WHERE qr_hash = ?", [qr_hash], (updateErr) => {
-                if (updateErr) return res.status(500).send("Error updating the ticket.");
-                res.status(200).send({ status: "success", message: "QR code is valid and now deactivated." });
+            db.query("UPDATE tickets SET is_active = 0 WHERE id = ?", [ticket.id], (err, result) => {
+                if (err) {
+                    console.error("Database update error:", err);
+                    return res.status(500).send("Error on the server.");
+                }
+
+                return res.status(200).send({ message: "QR code is valid and has been deactivated." });
             });
         } else {
-            res.status(400).send({ status: "fail", message: "QR code is already deactivated." });
+            return res.status(200).send({ message: "QR code is already used." });
         }
     });
 });
