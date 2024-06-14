@@ -17,7 +17,6 @@ db.connect((err) => {
 router.post("/check_qr", (req, res) => {
     const { qr_hash } = req.body;
 
-    console.log('check_qr');
     if (!qr_hash) {
         return res.status(400).send("QR hash is required");
     }
@@ -41,10 +40,10 @@ router.post("/check_qr", (req, res) => {
                     return res.status(500).send("Error on the server.");
                 }
 
-                return res.status(200).send({ message: "QR code is valid and has been deactivated." });
+                return res.status(200).send({ message: "QR code is valid and has been deactivated.", active: 1 });
             });
         } else {
-            return res.status(200).send({ message: "QR code is already used." });
+            return res.status(200).send({ message: "QR code is already used.", active: 0 });
         }
     });
 });
